@@ -53,7 +53,7 @@ dryver$MAINXSUB[k] <- "sandy silt"
 dryver$MAINXSUB <- as.factor(tolower(dryver$MAINXSUB))
 ```
 
-###Regression trees for Zero-Pass average infiltration time (`X0P_AV_TIME`)
+###Regression trees for Zero-Pass 1-Pass average infiltration time difference (`X0P_1P_AV_TIME`)
 There are two models presented, from different packages "`tree`" and "`rpart`". They use slightly different report printouts and visualizations, and give varied results. The letters next to factor names on tree nodes represent the factor group listed above in alphabetical order. For example: The `ROCK_GROUP` factor variable has three factor levels, "`breccia`" "`conglomerate`" and "`sandstone`". If the node is labelled "`ROCK_GROUP = b`" that indicates the node is splitting based on whether or not the factor group is "conglomerate". ***Yes is to the right, No is to the left.***
 
 ```{r}
