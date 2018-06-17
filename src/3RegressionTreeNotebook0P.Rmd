@@ -1,7 +1,8 @@
 ---
 title: "Regression Trees for Zero pass average infiltration time"
 date: "16 June 2018"
-output: html_notebook
+output: 
+    html_document: default
 ---
 
 The dataset used is the csv file on Kurt's github site. Dataset structure is listed below.
