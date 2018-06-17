@@ -1,0 +1,101 @@
+---
+title: "Regression Trees for Zero pass average infiltration time"
+date: "16 June 2018"
+output: html_notebook
+---
+
+The dataset used is the csv file on Kurt's github site. Dataset structure is listed below.
+```{r}
+dryver <- read.csv("https://raw.githubusercontent.com/kurtjoy/DRYVER_IMPACT/master/dryver_nat_20180612.csv")
+names(dryver)[1] <- "NEW_ID" 
+dryver["NEW_ID"] <- as.character(dryver["NEW_ID"])
+str(dryver)
+```
+
+####Notes about regression trees:
+Regression tree predictors should have NO interaction terms. This means that factor variables should not overlap in the information they present, and numerical variables should represent unique measurements. I am a little concerned about the factor variables containing overlapping information, but I don't have enough expertise to know what to keep or drop.
+
+```{r}
+library(dplyr)
+#examine factors for overlap
+dryver %>% group_by(ROCK_GROUP, MAINXSUB, MAIN_ROCK,DRYVER_GROUP., SUB_ROCK) %>% summarize(n = n())  %>% arrange(desc(n))
+
+#check factors for mistakes
+unique(dryver$MAIN_ROCK)
+unique(dryver$DRYVER_GROUP.)
+unique(dryver$SUB_ROCK)
+unique(dryver$MAINXSUB) # << this one has some typos
+unique(dryver$ROCK_GROUP)
+
+#fix typos
+#change congolmerate to conglomerate
+dryver$MAINXSUB <- gsub(pattern = "congolmerate", 
+                                  replacement = "conglomerate", 
+                                  x = dryver$MAINXSUB)
+
+#change one instance of "sands" to "sand"
+k <- which(dryver$MAINXSUB == "sands")
+dryver$MAINXSUB[k] <- "sand"
+
+#change sand conglomerate to sandy conglomerate
+k <- which(dryver$MAINXSUB == "sand conglomerate")
+dryver$MAINXSUB[k] <- "sandy conglomerate"
+
+#change sandY silts to sandy silt
+k <- which(dryver$MAINXSUB == "sandy silts")
+dryver$MAINXSUB[k] <- "sandy silt"
+
+#change sandY silts to sandy silt
+k <- which(dryver$MAINXSUB == "sandy silts")
+dryver$MAINXSUB[k] <- "sandy silt"
+
+#LOWER CASE
+dryver$MAINXSUB <- as.factor(tolower(dryver$MAINXSUB))
+```
+
+###Regression trees for Zero-Pass average infiltration time (`X0P_AV_TIME`)
+There are two models presented, from different packages "`tree`" and "`rpart`". They use slightly different report printouts and visualizations, and give varied results. The letters next to factor names on tree nodes represent the factor group listed above in alphabetical order. For example: The `ROCK_GROUP` factor variable has three factor levels, "`breccia`" "`conglomerate`" and "`sandstone`". If the node is labelled "`ROCK_GROUP = b`" that indicates the node is splitting based on whether or not the factor group is "conglomerate". ***Yes is to the right, No is to the left.***
+
+```{r}
+library(tree)
+library(rpart)
+
+target <- "X0P_AV_TIME"
+t <- which(names(dryver) == target)
+df <- dryver[c(2,5:15,t)]
+```
+
+These are the names of the variables in the model:
+```{r}
+names(df)
+```
+
+
+###First version of this tree using package `rpart`
+```{r}
+model1 <- rpart(
+  X0P_AV_TIME ~ ., 
+  data = df, 
+  control = rpart.control(minsplit = 20))
+par(xpd = NA, mar = rep(0.7, 4)) 
+plot(model1, compress = TRUE)
+text(model1, cex = 0.7, use.n = TRUE, fancy = FALSE, all = TRUE)
+summary(model1)
+```
+
+###Second version of this tree using package `tree`
+```{r}
+model2 <- tree(formula = X0P_AV_TIME ~ ., 
+          data = df)
+model2
+summary(model2)
+plot(model2)
+text(model2, cex = 0.75)
+```
+
+Last updated:
+```{r}
+timestamp()
+Sys.info()["user"] 
+R.Version()$version.string
+```
