@@ -18,11 +18,11 @@ Regression tree predictors should have NO interaction terms. This means that fac
 ```{r, include=F}
 library(dplyr)
 #examine factors for overlap
-dryver %>% group_by(ROCK_GROUP, MAINXSUB, MAIN_ROCK,DRYVER_GROUP., SUB_ROCK) %>% summarize(n = n())  %>% arrange(desc(n))
+dryver %>% group_by(ROCK_GROUP, MAINXSUB, MAIN_ROCK,DRYVER_GROUP, SUB_ROCK) %>% summarize(n = n())  %>% arrange(desc(n))
 
 #check factors for mistakes
 unique(dryver$MAIN_ROCK)
-unique(dryver$DRYVER_GROUP.)
+unique(dryver$DRYVER_GROUP)
 unique(dryver$SUB_ROCK)
 unique(dryver$MAINXSUB) # << this one has some typos
 unique(dryver$ROCK_GROUP)
@@ -53,19 +53,24 @@ dryver$MAINXSUB[k] <- "sandy silt"
 dryver$MAINXSUB <- as.factor(tolower(dryver$MAINXSUB))
 ```
 
-<<<<<<< HEAD
+
 ###Regression trees for Zero-Pass 1-Pass average infiltration time difference (`X0P_1P_AV_TIME`)
-=======
+
 ###Regression trees for Zero-Pass average infiltration time (`X0P_1P_AV_TIME`)
 >>>>>>> 387cff27930376e77231a1a005b73e1d447af752
 There are two models presented, from different packages "`tree`" and "`rpart`". They use slightly different report printouts and visualizations, and give varied results. The letters next to factor names on tree nodes represent the factor group listed above in alphabetical order. For example: The `ROCK_GROUP` factor variable has three factor levels, "`breccia`" "`conglomerate`" and "`sandstone`". If the node is labelled "`ROCK_GROUP = b`" that indicates the node is splitting based on whether or not the factor group is "conglomerate". ***Yes is to the right, No is to the left.***
 
 ```{r}
-library(tree)
-library(rpart)
-target <- "X0P_1P_AV_TIME"
+target <- "i0P_1P_AV_TIME"
+
+predictors <- c("c0P_COLOR",
+                "MAIN_ROCK", "DRYVER_GROUP", "SUB_ROCK", "ROCK_GROUP", "MAINXSUB",
+                "d0P_AV_Sq", "d0P_AV_Sz", "d0P_AV_Ssk"
+                )
+
+p <- which(names(dryver) %in% predictors)
 t <- which(names(dryver) == target)
-df <- dryver[c(5:12,t)]
+df <- dryver[c(p,t)]
 ```
 
 
@@ -77,8 +82,9 @@ names(df)
 
 ### Run 1, version 1 using package `rpart`
 ```{r}
+library(rpart)
 model1 <- rpart(
-  X0P_1P_AV_TIME ~ ., 
+  i0P_1P_AV_TIME ~ ., 
   data = df, 
   control = rpart.control(minsplit = 20))
 par(xpd = NA, mar = rep(0.7, 4)) 
@@ -89,7 +95,8 @@ summary(model1)
 
 ###Run 1, version 2 using package `tree`
 ```{r}
-model2 <- tree(formula = X0P_1P_AV_TIME ~ ., 
+library(tree)
+model2 <- tree(formula = i0P_1P_AV_TIME ~ ., 
           data = df)
 model2
 summary(model2)
@@ -101,15 +108,20 @@ text(model2, cex = 0.75)
 #Run 2
 Add depth 1P variable
 ```{r}
-X1P_AV_D <- dryver$X1P_AV_D
-df <- cbind(df, X1P_AV_D)
+target <- "i0P_1P_AV_TIME"
+predictors <- c(predictors, "d1P_AV_D") 
+
+p <- which(names(dryver) %in% predictors)
+t <- which(names(dryver) == target)
+df <- dryver[c(p,t)]
+
 names(df)
 ```
 
 ### Run 2, version 1 using package `rpart`
 ```{r}
 model1 <- rpart(
-  X0P_1P_AV_TIME ~ ., 
+  i0P_1P_AV_TIME ~ ., 
   data = df, 
   control = rpart.control(minsplit = 20))
 par(xpd = NA, mar = rep(0.7, 4)) 
@@ -120,7 +132,7 @@ summary(model1)
 
 ###Run 2, version 2 using package `tree`
 ```{r}
-model2 <- tree(formula = X0P_1P_AV_TIME ~ ., 
+model2 <- tree(formula = i0P_1P_AV_TIME ~ ., 
           data = df)
 model2
 summary(model2)
@@ -131,14 +143,20 @@ text(model2, cex = 0.75)
 #Run 3
 Add depth 20P, 20P surface roughness, WEP and CCI variables
 ```{r}
-df <- dryver[c(3:15,24,t)]
+target <- "i0P_1P_AV_TIME"
+predictors <- c(predictors, "d1P_AV_D", "d20P_AV_D","d20P_AV_Sq", "d20P_AV_Sz", "d20P_AV_Ssk", "WEP", "CCI") 
+
+p <- which(names(dryver) %in% predictors)
+t <- which(names(dryver) == target)
+df <- dryver[c(p,t)]
+
 names(df)
 ```
 
 ###Run 3, version 1 using package `rpart`
 ```{r}
 model1 <- rpart(
-  X0P_1P_AV_TIME ~ ., 
+  i0P_1P_AV_TIME ~ ., 
   data = df, 
   control = rpart.control(minsplit = 20))
 par(xpd = NA, mar = rep(0.7, 4)) 
@@ -149,7 +167,7 @@ summary(model1)
 
 ###Run 3, version 2 using package `tree`
 ```{r}
-model2 <- tree(formula = X0P_1P_AV_TIME ~ ., 
+model2 <- tree(formula = i0P_1P_AV_TIME ~ ., 
           data = df)
 model2
 summary(model2)
